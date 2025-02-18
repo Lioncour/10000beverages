@@ -14,7 +14,7 @@ I'm documenting every unique beverage I consume through photographs. The images 
 
 ## View the Site
 
-Visit [10000beverages.com](https://10000beverages.com)
+Visit [10000beverages.com](https://10000beverages.no)
 
 ## Features
 
