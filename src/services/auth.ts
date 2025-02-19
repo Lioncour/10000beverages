@@ -58,23 +58,14 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
     console.log(`Total files loaded: ${allFiles.length}`);
 
     return allFiles.map((file: DriveFile) => {
-      // Try different URL construction methods in sequence
-      let imageUrl = `https://drive.google.com/uc?id=${file.id}&export=view`;
+      // Use the direct view URL that we know works
+      const imageUrl = `https://drive.google.com/uc?export=view&id=${file.id}`;
       
-      // If the first URL doesn't work, try the thumbnail
-      if (!imageUrl.includes('undefined')) {
-        const thumbnailUrl = file.thumbnailLink?.replace('=s220', '=s2000');
-        if (thumbnailUrl) {
-          imageUrl = thumbnailUrl;
-        }
-      }
-      
-      // If still no valid URL, try webContentLink
-      if (!imageUrl.includes('undefined') && file.webContentLink) {
-        imageUrl = file.webContentLink;
-      }
-      
-      console.log(`URL for ${file.name}:`, imageUrl);
+      // Log for debugging
+      console.log(`Processing ${file.name}:`, {
+        id: file.id,
+        url: imageUrl
+      });
       
       return {
         id: file.id,
