@@ -26,6 +26,7 @@ function App() {
   const [faces, setFaces] = useState<FaceData[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState<Image | null>(null)
+  const [selectedFace, setSelectedFace] = useState<FaceData | null>(null);
 
   useEffect(() => {
     async function loadImages() {
@@ -83,11 +84,15 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [handleKeyPress])
 
+  const handleFaceClick = (face: FaceData) => {
+    setSelectedFace(face);
+  };
+
   if (loading) return <div className="loading">Loading beverages...</div>
 
   return (
     <div className="container">
-      <FaceStats faces={faces} />
+      <FaceStats faces={faces} onFaceClick={handleFaceClick} />
       <div className="image-grid">
         <div className="counter-container">
           <div className="counter">
@@ -115,6 +120,17 @@ function App() {
             <div className="modal-info">
               <span className="modal-date">{selectedImage.date}</span>
               <span className="modal-number">#{selectedImage.number}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedFace && (
+        <div className="modal" onClick={() => setSelectedFace(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <img src={selectedFace.thumbnailUrl} alt="Face" />
+            <div className="modal-info">
+              <span className="modal-count">Appears in {selectedFace.count} images</span>
             </div>
           </div>
         </div>
