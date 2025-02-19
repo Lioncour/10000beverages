@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { fetchImages } from './services/auth'  // We'll need to implement this
 import './App.css'  // We'll create this file next
+import { updateFavicon } from '../public/favicon'
 
 interface Image {
   id: string
@@ -27,6 +28,11 @@ function App() {
             number: fetchedImages.length - index // Highest number for newest
           }))
         setImages(sortedImages)
+        
+        // Set the first image as favicon
+        if (sortedImages.length > 0) {
+          updateFavicon(sortedImages[0].url);
+        }
       } catch (error) {
         console.error('Error loading images:', error)
       } finally {
@@ -59,6 +65,13 @@ function App() {
   return (
     <div className="container">
       <div className="image-grid">
+        <div className="counter-container">
+          <div className="counter">
+            <span className="current">{images.length}</span>
+            <span className="total">/10000</span>
+            <span className="label">beverages</span>
+          </div>
+        </div>
         {images.map(image => (
           <div 
             key={image.id} 
