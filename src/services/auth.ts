@@ -14,6 +14,7 @@ interface DriveFile {
   webContentLink?: string;
   thumbnailLink?: string;
   createdTime?: string;
+  modifiedTime?: string;
 }
 
 export async function fetchImages(): Promise<Array<{ id: string; url: string; name: string; date: string }>> {
@@ -28,7 +29,7 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
     do {
       const pageQuery = pageToken ? `&pageToken=${pageToken}` : '';
       // Request more fields including thumbnailLink
-      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink,mimeType,createdTime)&pageSize=1000${pageQuery}`;
+      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink,mimeType,createdTime,modifiedTime)&pageSize=1000${pageQuery}`;
       
       const response = await fetch(url);
 
@@ -63,20 +64,30 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
       const imageUrl = file.thumbnailLink?.replace('=s220', '=s1600') || 
                       `https://drive.google.com/thumbnail?id=${file.id}&sz=w1600`;
       
-      // Format the date
-      const date = file.createdTime 
-        ? new Date(file.createdTime).toLocaleDateString('no-NO', {
+      // Try to extract date from filename first (assuming format YYYYMMDD_HHMMSS)
+      let date = '';
+      const dateMatch = file.name.match(/^(\d{8})_/);
+      if (dateMatch) {
+        const dateStr = dateMatch[1];
+        date = `${dateStr.slice(6, 8)}.${dateStr.slice(4, 6)}.${dateStr.slice(0, 4)}`;
+      } else {
+        // Fall back to modified time, then created time
+        const timeStamp = file.modifiedTime || file.createdTime;
+        if (timeStamp) {
+          date = new Date(timeStamp).toLocaleDateString('no-NO', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit'
-          })
-        : '';
+          });
+        }
+      }
       
       // Log for debugging
-      console.log(`Processing ${file.name}:`, {
-        id: file.id,
-        thumbnailLink: file.thumbnailLink,
-        finalUrl: imageUrl
+      console.log(`File ${file.name}:`, {
+        filename: file.name,
+        modifiedTime: file.modifiedTime,
+        createdTime: file.createdTime,
+        finalDate: date
       });
       
       return {
