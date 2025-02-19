@@ -13,9 +13,10 @@ interface DriveFile {
   mimeType: string;
   webContentLink?: string;
   thumbnailLink?: string;
+  createdTime?: string;
 }
 
-export async function fetchImages(): Promise<Array<{ id: string; url: string; name: string }>> {
+export async function fetchImages(): Promise<Array<{ id: string; url: string; name: string; date: string }>> {
   try {
     if (!GOOGLE_API_KEY || !FOLDER_ID) {
       throw new Error(`Missing API key or folder ID`);
@@ -27,7 +28,7 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
     do {
       const pageQuery = pageToken ? `&pageToken=${pageToken}` : '';
       // Request more fields including thumbnailLink
-      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink,mimeType)&pageSize=1000${pageQuery}`;
+      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink,mimeType,createdTime)&pageSize=1000${pageQuery}`;
       
       const response = await fetch(url);
 
@@ -62,6 +63,15 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
       const imageUrl = file.thumbnailLink?.replace('=s220', '=s1600') || 
                       `https://drive.google.com/thumbnail?id=${file.id}&sz=w1600`;
       
+      // Format the date
+      const date = file.createdTime 
+        ? new Date(file.createdTime).toLocaleDateString('no-NO', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          })
+        : '';
+      
       // Log for debugging
       console.log(`Processing ${file.name}:`, {
         id: file.id,
@@ -72,7 +82,8 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
       return {
         id: file.id,
         name: file.name,
-        url: imageUrl
+        url: imageUrl,
+        date: date
       };
     });
   } catch (error) {

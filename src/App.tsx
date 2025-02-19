@@ -7,7 +7,7 @@ interface Image {
   id: string
   url: string
   name: string
-  date?: string // Add date if available from Google Drive
+  date: string
   number: number // Position in the grid
 }
 
