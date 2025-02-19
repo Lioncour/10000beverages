@@ -28,8 +28,8 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
 
     do {
       const pageQuery = pageToken ? `&pageToken=${pageToken}` : '';
-      // Request more fields including thumbnailLink
-      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink,mimeType,createdTime,modifiedTime)&pageSize=1000${pageQuery}`;
+      // Add pageSize=50 to limit results
+      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink,mimeType,createdTime,modifiedTime)&pageSize=50${pageQuery}`;
       
       const response = await fetch(url);
 
@@ -55,50 +55,9 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
       }
 
       console.log(`Loaded ${allFiles.length} files so far...`);
+
+      // Only get first page
+      break;  // Add this to stop after first 50 images
     } while (pageToken);
 
-    console.log(`Total files loaded: ${allFiles.length}`);
-
-    return allFiles.map((file: DriveFile) => {
-      // Use thumbnailLink with a larger size for better quality
-      const imageUrl = file.thumbnailLink?.replace('=s220', '=s1600') || 
-                      `https://drive.google.com/thumbnail?id=${file.id}&sz=w1600`;
-      
-      // Try to extract date from filename first (assuming format YYYYMMDD_HHMMSS)
-      let date = '';
-      const dateMatch = file.name.match(/^(\d{8})_/);
-      if (dateMatch) {
-        const dateStr = dateMatch[1];
-        date = `${dateStr.slice(6, 8)}.${dateStr.slice(4, 6)}.${dateStr.slice(0, 4)}`;
-      } else {
-        // Fall back to modified time, then created time
-        const timeStamp = file.modifiedTime || file.createdTime;
-        if (timeStamp) {
-          date = new Date(timeStamp).toLocaleDateString('no-NO', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-          });
-        }
-      }
-      
-      // Log for debugging
-      console.log(`File ${file.name}:`, {
-        filename: file.name,
-        modifiedTime: file.modifiedTime,
-        createdTime: file.createdTime,
-        finalDate: date
-      });
-      
-      return {
-        id: file.id,
-        name: file.name,
-        url: imageUrl,
-        date: date
-      };
-    });
-  } catch (error) {
-    console.error('Error fetching images:', error);
-    return [];
-  }
-} 
+    console.log(`

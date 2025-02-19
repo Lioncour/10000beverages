@@ -67,17 +67,19 @@ function App() {
   }, [])
 
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
-    if (!selectedImage) return
-    
-    const currentIndex = images.findIndex(img => img.id === selectedImage.id)
-    if (e.key === 'ArrowRight' && currentIndex < images.length - 1) {
-      setSelectedImage(images[currentIndex + 1])
-    } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
-      setSelectedImage(images[currentIndex - 1])
-    } else if (e.key === 'Escape') {
-      setSelectedImage(null)
+    if (selectedImage) {
+      if (e.key === 'ArrowRight' && currentIndex < images.length - 1) {
+        setSelectedImage(images[currentIndex + 1])
+      } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+        setSelectedImage(images[currentIndex - 1])
+      } else if (e.key === 'Escape') {
+        setSelectedImage(null)
+        setSelectedFace(null)  // Also close face modal
+      }
+    } else if (selectedFace && e.key === 'Escape') {
+      setSelectedFace(null)
     }
-  }, [selectedImage, images])
+  }, [selectedImage, selectedFace, images])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress)
