@@ -31,10 +31,8 @@ function App() {
     async function loadImages() {
       try {
         const fetchedImages = await fetchImages()
-        // Sort by date (newest first) and add number
         const sortedImages = fetchedImages
           .sort((a, b) => {
-            // Convert dates from DD.MM.YYYY format to timestamps
             const [dayA, monthA, yearA] = a.date.split('.');
             const [dayB, monthB, yearB] = b.date.split('.');
             const dateA = new Date(Number(yearA), Number(monthA) - 1, Number(dayA));
@@ -43,21 +41,24 @@ function App() {
           })
           .map((img, index) => ({
             ...img,
-            number: fetchedImages.length - index // Highest number for newest
+            number: fetchedImages.length - index
           }));
+
         setImages(sortedImages)
+        setLoading(false)  // Set loading to false after images are loaded
+
+        // Process faces after images are shown
+        setTimeout(async () => {
+          console.log('Starting face detection...');
+          const detectedFaces = await processFaces(sortedImages);
+          setFaces(detectedFaces);
+        }, 100);
         
-        // Process faces after images are loaded
-        const detectedFaces = await processFaces(sortedImages);
-        setFaces(detectedFaces);
-        
-        // Set the first image as favicon
         if (sortedImages.length > 0) {
           updateFavicon(sortedImages[0].url);
         }
       } catch (error) {
         console.error('Error loading images:', error)
-      } finally {
         setLoading(false)
       }
     }
