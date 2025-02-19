@@ -26,7 +26,8 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
 
     do {
       const pageQuery = pageToken ? `&pageToken=${pageToken}` : '';
-      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink)&pageSize=1000${pageQuery}`;
+      // Request more fields including thumbnailLink
+      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink,mimeType)&pageSize=1000${pageQuery}`;
       
       const response = await fetch(url);
 
@@ -40,16 +41,30 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
       allFiles = [...allFiles, ...data.files];
       pageToken = data.nextPageToken;
 
+      // Log sample of URLs we're getting
+      if (data.files?.length > 0) {
+        console.log('Sample file:', {
+          name: data.files[0].name,
+          webContentLink: data.files[0].webContentLink,
+          thumbnailLink: data.files[0].thumbnailLink,
+          webViewLink: data.files[0].webViewLink,
+          mimeType: data.files[0].mimeType
+        });
+      }
+
       console.log(`Loaded ${allFiles.length} files so far...`);
     } while (pageToken);
 
     console.log(`Total files loaded: ${allFiles.length}`);
 
     return allFiles.map((file: DriveFile) => {
+      // Try different URL construction methods
       const imageUrl = 
-        file.webContentLink || 
-        file.thumbnailLink?.replace('=s220', '=s2000') || // Much larger thumbnails
-        `https://drive.google.com/uc?id=${file.id}&export=download`;
+        `https://drive.google.com/uc?id=${file.id}&export=view` || // Direct view URL
+        file.thumbnailLink?.replace('=s220', '=s2000') || // High-res thumbnail
+        file.webContentLink; // Download link as fallback
+      
+      console.log(`URL for ${file.name}:`, imageUrl);
       
       return {
         id: file.id,
