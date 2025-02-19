@@ -29,8 +29,8 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
 
     do {
       const pageQuery = pageToken ? `&pageToken=${pageToken}` : '';
-      // Simplified query with essential fields
-      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,createdTime)&pageSize=50${pageQuery}`;
+      // Updated URL to request all needed fields
+      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,createdTime,webContentLink,thumbnailLink)&pageSize=50${pageQuery}`;
       
       const response = await fetch(url);
 
@@ -51,11 +51,15 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
     } while (pageToken);
 
     return allFiles.map((file: DriveFile) => {
-      // Construct a simple direct URL
-      const imageUrl = `https://drive.google.com/uc?id=${file.id}`;
+      // Try thumbnailLink first, then fall back to direct URL
+      const imageUrl = file.thumbnailLink?.replace('=s220', '=s2000') || 
+                      `https://drive.google.com/uc?export=download&id=${file.id}`;
       
-      // Log each URL we're creating
-      console.log('Created URL:', imageUrl, 'for file:', file.name);
+      console.log('Processing file:', {
+        name: file.name,
+        thumbnailLink: file.thumbnailLink,
+        finalUrl: imageUrl
+      });
 
       // Extract date from filename
       let date = '';
