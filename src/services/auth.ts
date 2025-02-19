@@ -1,6 +1,6 @@
 const isProd = import.meta.env.MODE === 'production';
 const REDIRECT_URI = isProd
-    ? 'https://www.10000beverages.com/oauth2callback'
+    ? 'https://10000beverages.no/oauth2callback'
     : 'http://localhost:5173/oauth2callback'; 
 
 // Google Drive API configuration
@@ -17,18 +17,23 @@ interface DriveFile {
 
 export async function fetchImages(): Promise<Array<{ id: string; url: string; name: string }>> {
   try {
-    // Query for image files in the specified folder
-    const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=files(id,name,webContentLink,thumbnailLink)`
-    );
+    const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=files(id,name,webContentLink,thumbnailLink)`;
+    
+    console.log('Fetching from URL:', url);
+    console.log('Using API Key:', GOOGLE_API_KEY?.substring(0, 5) + '...');
+    console.log('Using Folder ID:', FOLDER_ID);
+
+    const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error('Failed to fetch images from Google Drive');
+      const errorText = await response.text();
+      console.error('API Response:', response.status, errorText);
+      throw new Error(`Failed to fetch images from Google Drive: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Received files:', data.files?.length || 0);
     
-    // Transform the response data into the format our app expects
     return data.files.map((file: DriveFile) => ({
       id: file.id,
       name: file.name,
