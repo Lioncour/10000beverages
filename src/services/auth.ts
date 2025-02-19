@@ -15,6 +15,7 @@ interface DriveFile {
   thumbnailLink?: string;
   createdTime?: string;
   modifiedTime?: string;
+  webViewLink?: string;
 }
 
 export async function fetchImages(): Promise<Array<{ id: string; url: string; name: string; date: string }>> {
@@ -29,7 +30,7 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
     do {
       const pageQuery = pageToken ? `&pageToken=${pageToken}` : '';
       // Add pageSize=50 to limit results
-      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink,mimeType,createdTime,modifiedTime)&pageSize=50${pageQuery}`;
+      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink,mimeType,createdTime,modifiedTime,imageMediaMetadata)&pageSize=50${pageQuery}`;
       
       const response = await fetch(url);
 
@@ -52,11 +53,19 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
     console.log(`Total files loaded: ${allFiles.length}`);
 
     return allFiles.map((file: DriveFile) => {
-      // Use direct download URL instead of thumbnail
-      const imageUrl = `https://drive.google.com/uc?export=view&id=${file.id}`;
-      
-      // Log the URL for debugging
-      console.log('Image URL:', imageUrl);
+      // Try different URL formats in order of preference
+      const imageUrl = file.webContentLink?.replace('&export=download', '') || // Direct link
+                      file.webViewLink?.replace('/view', '/preview') || // Preview link
+                      `https://drive.google.com/thumbnail?id=${file.id}&sz=w2000`; // Fallback to large thumbnail
+
+      // Log all available URLs for debugging
+      console.log('File URLs:', {
+        name: file.name,
+        final: imageUrl,
+        webContent: file.webContentLink,
+        webView: file.webViewLink,
+        thumbnail: file.thumbnailLink
+      });
       
       // Try to extract date from filename first (assuming format YYYYMMDD_HHMMSS)
       let date = '';
