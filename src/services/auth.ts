@@ -53,18 +53,14 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
     console.log(`Total files loaded: ${allFiles.length}`);
 
     return allFiles.map((file: DriveFile) => {
-      // Try different URL formats in order of preference
-      const imageUrl = file.webContentLink?.replace('&export=download', '') || // Direct link
-                      file.webViewLink?.replace('/view', '/preview') || // Preview link
-                      `https://drive.google.com/thumbnail?id=${file.id}&sz=w2000`; // Fallback to large thumbnail
-
-      // Log all available URLs for debugging
-      console.log('File URLs:', {
+      // Use the URL format that worked before
+      const imageUrl = `https://drive.google.com/uc?id=${file.id}&export=view`;
+      
+      // Log for debugging
+      console.log('Processing image:', {
         name: file.name,
-        final: imageUrl,
-        webContent: file.webContentLink,
-        webView: file.webViewLink,
-        thumbnail: file.thumbnailLink
+        url: imageUrl,
+        id: file.id
       });
       
       // Try to extract date from filename first (assuming format YYYYMMDD_HHMMSS)
