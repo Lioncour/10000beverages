@@ -66,10 +66,7 @@ function App() {
             onClick={() => setSelectedImage(image)}
           >
             <img src={image.url} alt={image.name} />
-            <span className="image-number">#{image.number}</span>
-            <div className="image-info">
-              <span className="image-date">{image.date}</span>
-            </div>
+            <div className="image-number">#{image.number}</div>
           </div>
         ))}
       </div>
@@ -80,7 +77,6 @@ function App() {
             <img src={selectedImage.url} alt={selectedImage.name} />
             <div className="modal-info">
               <span className="modal-date">{selectedImage.date}</span>
-              <span className="modal-name">{selectedImage.name}</span>
               <span className="modal-number">#{selectedImage.number}</span>
             </div>
           </div>
