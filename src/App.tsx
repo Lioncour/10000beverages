@@ -19,13 +19,14 @@ function App() {
     async function loadImages() {
       try {
         const fetchedImages = await fetchImages()
-        // Add number to each image
-        const numberedImages = fetchedImages.map((img, index) => ({
-          ...img,
-          number: index + 1,
-          date: new Date().toLocaleDateString() // Replace with actual date from metadata
-        }))
-        setImages(numberedImages)
+        // Sort by date (newest first) and add number
+        const sortedImages = fetchedImages
+          .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+          .map((img, index) => ({
+            ...img,
+            number: fetchedImages.length - index // Highest number for newest
+          }))
+        setImages(sortedImages)
       } catch (error) {
         console.error('Error loading images:', error)
       } finally {
@@ -57,7 +58,6 @@ function App() {
 
   return (
     <div className="container">
-      <h1>10000 Beverages</h1>
       <div className="image-grid">
         {images.map(image => (
           <div 
@@ -66,11 +66,10 @@ function App() {
             onClick={() => setSelectedImage(image)}
           >
             <img src={image.url} alt={image.name} />
+            <span className="image-number">#{image.number}</span>
             <div className="image-info">
               <span className="image-date">{image.date}</span>
-              <span className="image-number">#{image.number}</span>
             </div>
-            <div className="image-name">{image.name}</div>
           </div>
         ))}
       </div>

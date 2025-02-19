@@ -1,15 +1,15 @@
 .container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
+  max-width: 100%;
+  margin: 0;
+  padding: 10px;
 }
 
 .image-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2px;
-  background: #1a1a1a;
-  padding: 2px;
+  gap: 10px;
+  background: none;
+  padding: 0;
 }
 
 .image-container {
@@ -81,6 +81,18 @@
   opacity: 1;
 }
 
+.image-number {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 1.2em;
+  z-index: 1;
+}
+
 .modal {
   position: fixed;
   top: 0;
@@ -95,14 +107,14 @@
 }
 
 .modal-content {
-  max-width: 90vw;
-  max-height: 90vh;
+  max-width: 95vw;
+  max-height: 95vh;
   position: relative;
 }
 
 .modal-content img {
   max-width: 100%;
-  max-height: 90vh;
+  max-height: 95vh;
   object-fit: contain;
 }
 
