@@ -39,18 +39,24 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
     const data = await response.json();
     console.log('Received files:', data.files?.length || 0);
     
-    // Log the first file to see what data we're getting
+    // Log more details about the first few files
     if (data.files?.length > 0) {
-      console.log('Sample file data:', data.files[0]);
+      console.log('First 3 files data:', data.files.slice(0, 3));
     }
 
-    return data.files.map((file: DriveFile) => ({
-      id: file.id,
-      name: file.name,
-      // Try webContentLink first, then fall back to constructed URL
-      url: file.webContentLink || 
-           `https://drive.google.com/uc?export=view&id=${file.id}`,
-    }));
+    return data.files.map((file: DriveFile) => {
+      const imageUrl = file.thumbnailLink || 
+                      `https://drive.google.com/thumbnail?id=${file.id}` ||
+                      `https://drive.google.com/uc?export=view&id=${file.id}`;
+      
+      console.log(`Image ${file.name} URL:`, imageUrl);
+      
+      return {
+        id: file.id,
+        name: file.name,
+        url: imageUrl
+      };
+    });
   } catch (error) {
     console.error('Error fetching images:', error);
     return [];
