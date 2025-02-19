@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { fetchImages } from './services/auth'  // We'll need to implement this
+import { processFaces } from './services/faces'
+import { FaceStats } from './components/FaceStats'
 import './App.css'  // We'll create this file next
 import { updateFavicon } from '../public/favicon'
 
@@ -11,8 +13,17 @@ interface Image {
   number: number // Position in the grid
 }
 
+// Add FaceData to existing interfaces
+interface FaceData {
+  id: string;
+  imageUrls: string[];
+  thumbnailUrl: string;
+  count: number;
+}
+
 function App() {
   const [images, setImages] = useState<Image[]>([])
+  const [faces, setFaces] = useState<FaceData[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState<Image | null>(null)
 
@@ -35,6 +46,10 @@ function App() {
             number: fetchedImages.length - index // Highest number for newest
           }));
         setImages(sortedImages)
+        
+        // Process faces after images are loaded
+        const detectedFaces = await processFaces(sortedImages);
+        setFaces(detectedFaces);
         
         // Set the first image as favicon
         if (sortedImages.length > 0) {
@@ -71,6 +86,7 @@ function App() {
 
   return (
     <div className="container">
+      <FaceStats faces={faces} />
       <div className="image-grid">
         <div className="counter-container">
           <div className="counter">
