@@ -109,7 +109,14 @@ function App() {
             className="image-container"
             onClick={() => setSelectedImage(image)}
           >
-            <img src={image.url} alt={image.name} />
+            <img 
+              src={image.url} 
+              alt={image.name} 
+              onError={(e) => {
+                console.error('Image failed to load:', image.url);
+                e.currentTarget.style.display = 'none';
+              }}
+            />
             <div className="image-number">#{image.number}</div>
           </div>
         ))}

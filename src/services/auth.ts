@@ -29,58 +29,48 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
 
     do {
       const pageQuery = pageToken ? `&pageToken=${pageToken}` : '';
-      // Add pageSize=50 to limit results
-      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,webContentLink,thumbnailLink,webViewLink,mimeType,createdTime,modifiedTime,imageMediaMetadata)&pageSize=50${pageQuery}`;
+      // Simplified query with essential fields
+      const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=nextPageToken,files(id,name,createdTime)&pageSize=50${pageQuery}`;
       
       const response = await fetch(url);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Response:', response.status, errorText);
-        throw new Error(`Failed to fetch images from Google Drive: ${response.status} ${errorText}`);
+        throw new Error(`Failed to fetch images: ${response.status}`);
       }
 
       const data = await response.json();
+      
+      // Log the raw response
+      console.log('API Response:', data);
+      
       allFiles = [...allFiles, ...data.files];
       pageToken = data.nextPageToken;
 
-      console.log(`Loaded ${allFiles.length} files so far...`);
-
       // Only get first page
-      break;  // Stop after first 50 images
+      break;
     } while (pageToken);
 
-    console.log(`Total files loaded: ${allFiles.length}`);
-
     return allFiles.map((file: DriveFile) => {
-      // Use the URL format that worked before
-      const imageUrl = `https://drive.google.com/uc?id=${file.id}&export=view`;
+      // Construct a simple direct URL
+      const imageUrl = `https://drive.google.com/uc?id=${file.id}`;
       
-      // Log for debugging
-      console.log('Processing image:', {
-        name: file.name,
-        url: imageUrl,
-        id: file.id
-      });
-      
-      // Try to extract date from filename first (assuming format YYYYMMDD_HHMMSS)
+      // Log each URL we're creating
+      console.log('Created URL:', imageUrl, 'for file:', file.name);
+
+      // Extract date from filename
       let date = '';
       const dateMatch = file.name.match(/^(\d{8})_/);
       if (dateMatch) {
         const dateStr = dateMatch[1];
         date = `${dateStr.slice(6, 8)}.${dateStr.slice(4, 6)}.${dateStr.slice(0, 4)}`;
-      } else {
-        // Fall back to modified time, then created time
-        const timeStamp = file.modifiedTime || file.createdTime;
-        if (timeStamp) {
-          date = new Date(timeStamp).toLocaleDateString('no-NO', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-          });
-        }
+      } else if (file.createdTime) {
+        date = new Date(file.createdTime).toLocaleDateString('no-NO', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
       }
-      
+
       return {
         id: file.id,
         name: file.name,
@@ -89,7 +79,7 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
       };
     });
   } catch (error) {
-    console.error('Error fetching images:', error);
+    console.error('Error in fetchImages:', error);
     return [];
   }
 }
