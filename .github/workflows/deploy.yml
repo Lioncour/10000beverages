@@ -2,7 +2,7 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - main  # Ensure this is your production branch
+      - main  # Make sure this matches your default branch name
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
