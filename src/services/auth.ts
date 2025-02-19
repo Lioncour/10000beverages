@@ -17,6 +17,10 @@ interface DriveFile {
 
 export async function fetchImages(): Promise<Array<{ id: string; url: string; name: string }>> {
   try {
+    if (!GOOGLE_API_KEY || !FOLDER_ID) {
+      throw new Error('Missing API key or folder ID');
+    }
+
     const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=files(id,name,webContentLink,thumbnailLink)`;
     
     console.log('Fetching from URL:', url);
