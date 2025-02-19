@@ -22,11 +22,18 @@ function App() {
         const fetchedImages = await fetchImages()
         // Sort by date (newest first) and add number
         const sortedImages = fetchedImages
-          .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+          .sort((a, b) => {
+            // Convert dates from DD.MM.YYYY format to timestamps
+            const [dayA, monthA, yearA] = a.date.split('.');
+            const [dayB, monthB, yearB] = b.date.split('.');
+            const dateA = new Date(Number(yearA), Number(monthA) - 1, Number(dayA));
+            const dateB = new Date(Number(yearB), Number(monthB) - 1, Number(dayB));
+            return dateB.getTime() - dateA.getTime();
+          })
           .map((img, index) => ({
             ...img,
             number: fetchedImages.length - index // Highest number for newest
-          }))
+          }));
         setImages(sortedImages)
         
         // Set the first image as favicon
