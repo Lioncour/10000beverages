@@ -26,12 +26,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '18'
           cache: 'npm'
-      - name: Install dependencies
+      - name: Clean install
         run: |
-          npm ci
-          npm install -g vite
+          rm -rf node_modules
+          rm -f package-lock.json
+          npm install
       - name: Build
         run: npm run build
         env:
