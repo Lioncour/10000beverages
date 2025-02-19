@@ -17,16 +17,17 @@ interface DriveFile {
 
 export async function fetchImages(): Promise<Array<{ id: string; url: string; name: string }>> {
   try {
+    console.log('Environment variables check:');
+    console.log('Environment mode:', import.meta.env.MODE);
+    console.log('API Key length:', GOOGLE_API_KEY?.length || 0);
+    console.log('Folder ID length:', FOLDER_ID?.length || 0);
+
     if (!GOOGLE_API_KEY || !FOLDER_ID) {
-      throw new Error('Missing API key or folder ID');
+      throw new Error(`Missing API key or folder ID. API Key: ${!!GOOGLE_API_KEY}, Folder ID: ${!!FOLDER_ID}`);
     }
 
     const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${GOOGLE_API_KEY}&fields=files(id,name,webContentLink,thumbnailLink)`;
     
-    console.log('Fetching from URL:', url);
-    console.log('Using API Key:', GOOGLE_API_KEY?.substring(0, 5) + '...');
-    console.log('Using Folder ID:', FOLDER_ID);
-
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -38,10 +39,17 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
     const data = await response.json();
     console.log('Received files:', data.files?.length || 0);
     
+    // Log the first file to see what data we're getting
+    if (data.files?.length > 0) {
+      console.log('Sample file data:', data.files[0]);
+    }
+
     return data.files.map((file: DriveFile) => ({
       id: file.id,
       name: file.name,
-      url: `https://drive.google.com/uc?export=view&id=${file.id}`,
+      // Try webContentLink first, then fall back to constructed URL
+      url: file.webContentLink || 
+           `https://drive.google.com/uc?export=view&id=${file.id}`,
     }));
   } catch (error) {
     console.error('Error fetching images:', error);
