@@ -58,11 +58,21 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
     console.log(`Total files loaded: ${allFiles.length}`);
 
     return allFiles.map((file: DriveFile) => {
-      // Try different URL construction methods
-      const imageUrl = 
-        `https://drive.google.com/uc?id=${file.id}&export=view` || // Direct view URL
-        file.thumbnailLink?.replace('=s220', '=s2000') || // High-res thumbnail
-        file.webContentLink; // Download link as fallback
+      // Try different URL construction methods in sequence
+      let imageUrl = `https://drive.google.com/uc?id=${file.id}&export=view`;
+      
+      // If the first URL doesn't work, try the thumbnail
+      if (!imageUrl.includes('undefined')) {
+        const thumbnailUrl = file.thumbnailLink?.replace('=s220', '=s2000');
+        if (thumbnailUrl) {
+          imageUrl = thumbnailUrl;
+        }
+      }
+      
+      // If still no valid URL, try webContentLink
+      if (!imageUrl.includes('undefined') && file.webContentLink) {
+        imageUrl = file.webContentLink;
+      }
       
       console.log(`URL for ${file.name}:`, imageUrl);
       
