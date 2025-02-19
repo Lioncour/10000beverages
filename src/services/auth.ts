@@ -43,21 +43,46 @@ export async function fetchImages(): Promise<Array<{ id: string; url: string; na
       allFiles = [...allFiles, ...data.files];
       pageToken = data.nextPageToken;
 
-      // Log sample of URLs we're getting
-      if (data.files?.length > 0) {
-        console.log('Sample file:', {
-          name: data.files[0].name,
-          webContentLink: data.files[0].webContentLink,
-          thumbnailLink: data.files[0].thumbnailLink,
-          webViewLink: data.files[0].webViewLink,
-          mimeType: data.files[0].mimeType
-        });
-      }
-
       console.log(`Loaded ${allFiles.length} files so far...`);
 
       // Only get first page
-      break;  // Add this to stop after first 50 images
+      break;  // Stop after first 50 images
     } while (pageToken);
 
-    console.log(`
+    console.log(`Total files loaded: ${allFiles.length}`);
+
+    return allFiles.map((file: DriveFile) => {
+      // Use thumbnailLink with a larger size for better quality
+      const imageUrl = file.thumbnailLink?.replace('=s220', '=s1600') || 
+                      `https://drive.google.com/thumbnail?id=${file.id}&sz=w1600`;
+      
+      // Try to extract date from filename first (assuming format YYYYMMDD_HHMMSS)
+      let date = '';
+      const dateMatch = file.name.match(/^(\d{8})_/);
+      if (dateMatch) {
+        const dateStr = dateMatch[1];
+        date = `${dateStr.slice(6, 8)}.${dateStr.slice(4, 6)}.${dateStr.slice(0, 4)}`;
+      } else {
+        // Fall back to modified time, then created time
+        const timeStamp = file.modifiedTime || file.createdTime;
+        if (timeStamp) {
+          date = new Date(timeStamp).toLocaleDateString('no-NO', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
+        }
+      }
+      
+      return {
+        id: file.id,
+        name: file.name,
+        url: imageUrl,
+        date: date
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching images:', error);
+    return [];
+  }
+}
